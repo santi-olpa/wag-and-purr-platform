@@ -14,6 +14,7 @@ import {
   Mail
 } from "lucide-react";
 import { mockPets } from "@/data/pets";
+import { mockUsers } from "@/data/users";
 import { useToast } from "@/hooks/use-toast";
 
 const PostDetail = () => {
@@ -24,6 +25,12 @@ const PostDetail = () => {
 
   const pet = mockPets.find(p => p.id === id);
   const isAuthenticated = false; // TODO: Connect to actual auth state
+  
+  // Find user by matching owner name (simplified for demo)
+  const ownerUser = mockUsers.find(user => 
+    pet?.owner.toLowerCase().includes(user.nombre.toLowerCase()) || 
+    pet?.owner.toLowerCase().includes(user.apellido.toLowerCase())
+  );
 
   if (!pet) {
     return (
@@ -199,7 +206,16 @@ const PostDetail = () => {
                 <div className="space-y-3">
                   <div className="flex items-center">
                     <User className="w-4 h-4 mr-3 text-muted-foreground" />
-                    <span>{pet.owner}</span>
+                    {ownerUser ? (
+                      <Link 
+                        to={`/user/${ownerUser.id}`}
+                        className="text-primary hover:text-primary-hover font-medium transition-colors"
+                      >
+                        {pet.owner}
+                      </Link>
+                    ) : (
+                      <span>{pet.owner}</span>
+                    )}
                   </div>
                   <div className="flex items-center">
                     <Mail className="w-4 h-4 mr-3 text-muted-foreground" />
@@ -217,7 +233,7 @@ const PostDetail = () => {
 
             {/* Adoption Button */}
             {pet.adoptionStatus === "Disponible" && (
-              <Card className="bg-gradient-primary border-0">
+              <Card className="gradient-primary border-0">
                 <CardContent className="p-6 text-center">
                   <h3 className="text-lg font-semibold text-white mb-2">
                     ¿Te interesa adoptar a {pet.name}?

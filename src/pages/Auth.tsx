@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { mockUsers } from "@/data/users";
+import md5 from "md5";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,7 +46,7 @@ const PROVINCIAS_ARGENTINA = [
 // Esquemas de validación
 const loginSchema = z.object({
   email: z.string().email("Ingrese un email válido").min(1, "El email es requerido"),
-  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres")
+  password: z.string().min(6, "La contraseña debe tener al menos 8 caracteres")
 });
 
 const registerSchema = z.object({
@@ -96,15 +98,34 @@ const Auth = () => {
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
 
-    // Simulate API call
+    // Validar usuario y contraseña en mock
+    const userFound = mockUsers.find(
+      (user) => user.email === data.email
+    );
+    const passwordHash = md5(data.password);
+
     setTimeout(() => {
       setIsLoading(false);
-      toast({
-        title: "¡Bienvenido de vuelta!",
-        description: "Has iniciado sesión correctamente.",
-      });
-      navigate("/dashboard");
-    }, 2000);
+      if (!userFound) {
+        toast({
+          title: "Usuario no encontrado",
+          description: "El correo ingresado no está registrado.",
+          variant: "destructive",
+        });
+      } else if (userFound.password !== passwordHash) {
+        toast({
+          title: "Contraseña incorrecta",
+          description: "La contraseña ingresada es incorrecta.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "¡Bienvenido de vuelta!",
+          description: "Has iniciado sesión correctamente.",
+        });
+        navigate("/dashboard");
+      }
+    }, 1000);
   };
 
   const handleRegister = async (data: RegisterFormData) => {
