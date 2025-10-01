@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useUser } from "@/context/UserContext";
 import { mockUsers } from "@/data/users";
 import md5 from "md5";
 import { useNavigate } from "react-router-dom";
@@ -46,7 +47,9 @@ const PROVINCIAS_ARGENTINA = [
 // Esquemas de validación
 const loginSchema = z.object({
   email: z.string().email("Ingrese un email válido").min(1, "El email es requerido"),
-  password: z.string().min(6, "La contraseña debe tener al menos 8 caracteres")
+  password: z.string()
+    .min(8, "La contraseña debe tener al menos 8 caracteres")
+    .regex(/^(?=.*[A-Z])(?=.*\d)/, "Debe contener al menos una mayúscula y un número")
 });
 
 const registerSchema = z.object({
@@ -72,6 +75,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { user, login } = useUser();
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -97,13 +101,10 @@ const Auth = () => {
 
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
-
-    // Validar usuario y contraseña en mock
     const userFound = mockUsers.find(
-      (user) => user.email === data.email
+      (u) => u.email === data.email
     );
     const passwordHash = md5(data.password);
-
     setTimeout(() => {
       setIsLoading(false);
       if (!userFound) {
@@ -119,6 +120,7 @@ const Auth = () => {
           variant: "destructive",
         });
       } else {
+        login(userFound);
         toast({
           title: "¡Bienvenido de vuelta!",
           description: "Has iniciado sesión correctamente.",
@@ -130,8 +132,20 @@ const Auth = () => {
 
   const handleRegister = async (data: RegisterFormData) => {
     setIsLoading(true);
-
-    // Simulate API call
+    // Guardar usuario con contraseña hasheada (mock)
+    const newUser = {
+      id: String(mockUsers.length + 1),
+      nombre: data.nombre,
+      apellido: data.apellido,
+      email: data.email,
+      password: md5(data.password),
+      phone: data.phone,
+      provincia: data.provincia,
+      localidad: data.localidad,
+      createdAt: new Date(),
+      avatar: ""
+    };
+    mockUsers.push(newUser);
     setTimeout(() => {
       setIsLoading(false);
       toast({
@@ -139,9 +153,22 @@ const Auth = () => {
         description: "Bienvenido a la comunidad PetNet.",
       });
       navigate("/dashboard");
-    }, 2000);
+    }, 1000);
   };
 
+  if (user) {
+    // Si hay usuario logueado, solo mostrar mensaje o redirigir
+    return (
+      <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-gradient-hero">
+        <div className="w-full max-w-md text-center">
+          <h2 className="text-2xl font-bold mb-4">Ya tienes sesión iniciada</h2>
+          <Button onClick={() => navigate("/dashboard")}>Ir a mi panel</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Renderizar formulario de login/registro si no hay usuario logueado
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-gradient-hero">
       <div className="w-full max-w-md">
@@ -198,7 +225,6 @@ const Auth = () => {
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={loginForm.control}
                       name="password"

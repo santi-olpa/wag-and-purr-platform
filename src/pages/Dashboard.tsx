@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useUser } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,22 +33,17 @@ interface AdoptionRequest {
   createdAt: Date;
 }
 
-interface UserProfile {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  location: string;
-}
+// Eliminado UserProfile, usamos User del contexto
 
 const Dashboard = () => {
   const { toast } = useToast();
-  const [profile, setProfile] = useState<UserProfile>({
-    name: "Juan Pérez",
-    email: "juan.perez@email.com", 
-    phone: "+34 612 345 678",
-    address: "Calle Mayor 123, 4º B",
-    location: "Madrid, España"
+  const { user, updateUser } = useUser();
+  const [editData, setEditData] = useState({
+    nombre: user?.nombre || "",
+    apellido: user?.apellido || "",
+    phone: user?.phone || "",
+    provincia: user?.provincia || "",
+    localidad: user?.localidad || ""
   });
 
   // Mock data for user's pets
@@ -93,6 +89,7 @@ const Dashboard = () => {
 
   const handleProfileUpdate = (e: React.FormEvent) => {
     e.preventDefault();
+    updateUser(editData);
     toast({
       title: "Perfil actualizado",
       description: "Tu información se ha guardado correctamente.",
@@ -118,7 +115,7 @@ const Dashboard = () => {
         </div>
 
         {/* Dashboard Tabs */}
-        <Tabs defaultValue="profile" className="space-y-8">
+  <Tabs defaultValue="profile" className="space-y-8">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">Mi Perfil</TabsTrigger>
             <TabsTrigger value="posts">Mis Publicaciones</TabsTrigger>
@@ -136,75 +133,73 @@ const Dashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleProfileUpdate} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nombre completo</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                {user ? (
+                  <form onSubmit={handleProfileUpdate} className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="nombre">Nombre</Label>
                         <Input
-                          id="name"
+                          id="nombre"
                           className="pl-10"
-                          value={profile.name}
-                          onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
+                          value={editData.nombre}
+                          onChange={(e) => setEditData(prev => ({ ...prev, nombre: e.target.value }))}
                         />
                       </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Correo electrónico</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <div className="space-y-2">
+                        <Label htmlFor="apellido">Apellido</Label>
+                        <Input
+                          id="apellido"
+                          className="pl-10"
+                          value={editData.apellido}
+                          onChange={(e) => setEditData(prev => ({ ...prev, apellido: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Correo electrónico</Label>
                         <Input
                           id="email"
                           type="email"
                           className="pl-10"
-                          value={profile.email}
-                          onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
+                          value={user.email}
+                          disabled
                         />
                       </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Teléfono</Label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Teléfono</Label>
                         <Input
                           id="phone"
+                          type="tel"
                           className="pl-10"
-                          value={profile.phone}
-                          onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+                          value={editData.phone}
+                          onChange={(e) => setEditData(prev => ({ ...prev, phone: e.target.value }))}
                         />
                       </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="location">Ubicación</Label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <div className="space-y-2">
+                        <Label htmlFor="provincia">Provincia</Label>
                         <Input
-                          id="location"
+                          id="provincia"
                           className="pl-10"
-                          value={profile.location}
-                          onChange={(e) => setProfile(prev => ({ ...prev, location: e.target.value }))}
+                          value={editData.provincia}
+                          onChange={(e) => setEditData(prev => ({ ...prev, provincia: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="localidad">Localidad</Label>
+                        <Input
+                          id="localidad"
+                          className="pl-10"
+                          value={editData.localidad}
+                          onChange={(e) => setEditData(prev => ({ ...prev, localidad: e.target.value }))}
                         />
                       </div>
                     </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Dirección</Label>
-                    <Input
-                      id="address"
-                      value={profile.address}
-                      onChange={(e) => setProfile(prev => ({ ...prev, address: e.target.value }))}
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full md:w-auto">
-                    Guardar Cambios
-                  </Button>
-                </form>
+                    <Button type="submit" className="w-full md:w-auto">
+                      Guardar Cambios
+                    </Button>
+                  </form>
+                ) : (
+                  <div className="text-center text-muted-foreground">No hay usuario logueado.</div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

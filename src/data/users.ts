@@ -17,7 +17,7 @@ export const mockUsers: User[] = [
     nombre: "María",
     apellido: "González",
     email: "maria.gonzalez@email.com",
-    password: "e10adc3949ba59abbe56e057f20f883e", // "123456" md5
+  password: "b2e98ad6f6eb8508dd6a14cfa704bad7", // "Password123" md5
     phone: "1123456789",
     provincia: "Buenos Aires",
     localidad: "La Plata",
@@ -29,7 +29,7 @@ export const mockUsers: User[] = [
     nombre: "Carlos",
     apellido: "Rodríguez",
     email: "carlos.rodriguez@email.com",
-    password: "25f4b85f1e1b5c4e2e7c2b7b7a7b7b7b", // "abcdef" md5 (simulado)
+  password: "e38ad214943daad1d64c102faec29de4", // "Carlos2025" md5
     phone: "1198765432",
     provincia: "Córdoba",
     localidad: "Córdoba Capital",
@@ -41,7 +41,7 @@ export const mockUsers: User[] = [
     nombre: "Ana",
     apellido: "Martínez",
     email: "ana.martinez@email.com",
-    password: "5f4dcc3b5aa765d61d8327deb882cf99", // "password" md5
+  password: "054d84e5c3d8a9504582f5984443c544", // "Ana2025A" md5 (real)
     phone: "1187654321",
     provincia: "Santa Fe",
     localidad: "Rosario",
@@ -53,7 +53,7 @@ export const mockUsers: User[] = [
     nombre: "Luis",
     apellido: "Fernández",
     email: "luis.fernandez@email.com",
-    password: "098f6bcd4621d373cade4e832627b4f6", // "test" md5
+  password: "c7e1249ffc03eb9ded908c236bd1996d", // "Luis2025" md5
     phone: "1156789123",
     provincia: "Mendoza",
     localidad: "Mendoza Capital",
@@ -65,7 +65,7 @@ export const mockUsers: User[] = [
     nombre: "Sofia",
     apellido: "López",
     email: "sofia.lopez@email.com", 
-    password: "827ccb0eea8a706c4c34a16891f84e7b", // "12345" md5
+  password: "e1cbb0c3879af8347246f12c559a86b5", // "Sofia2025" md5
     phone: "1145678912",
     provincia: "Tucumán",
     localidad: "San Miguel de Tucumán",

@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Heart, Menu, User, X } from "lucide-react";
+import { useUser } from "@/context/UserContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const isAuthenticated = false; // TODO: Connect to actual auth state
+  const { user, logout } = useUser();
+  const isAuthenticated = !!user;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -57,10 +59,21 @@ const Navbar = () => {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
-              <Button variant="outline" size="sm">
-                <User className="w-4 h-4 mr-2" />
-                Mi Perfil
-              </Button>
+              <>
+                <Link to="/dashboard">
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    {user?.avatar ? (
+                      <img src={user.avatar} alt="avatar" className="w-6 h-6 rounded-full" />
+                    ) : (
+                      <User className="w-4 h-4" />
+                    )}
+                    {user?.nombre}
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="sm" onClick={logout}>
+                  Cerrar sesión
+                </Button>
+              </>
             ) : (
               <Link to="/auth">
                 <Button variant="default" size="sm">
