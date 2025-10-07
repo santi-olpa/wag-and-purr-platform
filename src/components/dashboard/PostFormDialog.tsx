@@ -30,11 +30,40 @@ import {
 import { Pet } from "@/data/pets";
 import { Upload, X } from "lucide-react";
 
+// Provincias de Argentina
+const PROVINCIAS_ARGENTINA = [
+  "Buenos Aires",
+  "Catamarca",
+  "Chaco",
+  "Chubut",
+  "Ciudad Autónoma de Buenos Aires",
+  "Córdoba",
+  "Corrientes",
+  "Entre Ríos",
+  "Formosa",
+  "Jujuy",
+  "La Pampa",
+  "La Rioja",
+  "Mendoza",
+  "Misiones",
+  "Neuquén",
+  "Río Negro",
+  "Salta",
+  "San Juan",
+  "San Luis",
+  "Santa Cruz",
+  "Santa Fe",
+  "Santiago del Estero",
+  "Tierra del Fuego",
+  "Tucumán"
+];
+
 const postSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(50, "Máximo 50 caracteres"),
   type: z.enum(["Perro", "Gato", "Ave", "Conejo", "Otro"]),
   age: z.enum(["Cachorro", "Joven", "Adulto", "Senior"]),
-  location: z.string().min(3, "Ingrese una ubicación válida"),
+  provincia: z.string().min(1, "Seleccione una provincia"),
+  localidad: z.string().min(2, "Ingrese una localidad válida"),
   description: z.string().min(20, "La descripción debe tener al menos 20 caracteres").max(500, "Máximo 500 caracteres"),
   images: z.array(z.string()).min(1, "Debe agregar al menos una imagen").max(5, "Máximo 5 imágenes"),
 });
@@ -64,7 +93,8 @@ export const PostFormDialog = ({
       name: "",
       type: "Perro",
       age: "Joven",
-      location: "",
+      provincia: "",
+      localidad: "",
       description: "",
       images: [],
     },
@@ -72,11 +102,17 @@ export const PostFormDialog = ({
 
   useEffect(() => {
     if (editingPost && mode === "edit") {
+      // Parse location into localidad and provincia
+      const locationParts = editingPost.location.split(", ");
+      const localidad = locationParts[0] || "";
+      const provincia = locationParts[1] || "";
+
       form.reset({
         name: editingPost.name,
         type: editingPost.type,
         age: editingPost.age,
-        location: editingPost.location,
+        provincia: provincia,
+        localidad: localidad,
         description: editingPost.description,
         images: editingPost.images,
       });
@@ -86,7 +122,8 @@ export const PostFormDialog = ({
         name: "",
         type: "Perro",
         age: "Joven",
-        location: "",
+        provincia: "",
+        localidad: "",
         description: "",
         images: [],
       });
@@ -110,8 +147,10 @@ export const PostFormDialog = ({
   };
 
   const handleSubmit = (data: PostFormData) => {
+    // Combine localidad and provincia into location
     onSubmit({
       ...data,
+      location: `${data.localidad}, ${data.provincia}`,
       images: imageUrls,
     });
     onOpenChange(false);
@@ -198,19 +237,46 @@ export const PostFormDialog = ({
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ubicación</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ciudad, País" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="provincia"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Provincia</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar provincia" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {PROVINCIAS_ARGENTINA.map((provincia) => (
+                          <SelectItem key={provincia} value={provincia}>
+                            {provincia}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="localidad"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Localidad</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Tu localidad" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}

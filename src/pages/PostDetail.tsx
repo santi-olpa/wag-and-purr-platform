@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,20 +11,25 @@ import {
   Share2, 
   Calendar,
   User,
-  Mail
+  Mail,
+  Edit
 } from "lucide-react";
 import { mockPets } from "@/data/pets";
 import { mockUsers } from "@/data/users";
 import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@/context/UserContext";
 
 const PostDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useUser();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
   const pet = mockPets.find(p => p.id === id);
-  const isAuthenticated = false; // TODO: Connect to actual auth state
+  const isAuthenticated = !!user;
+  const isOwner = user && pet && pet.ownerId === user.id;
   
   // Find user by matching owner name (simplified for demo)
   const ownerUser = mockUsers.find(user => 
@@ -58,15 +63,6 @@ const PostDetail = () => {
   };
 
   const handleAdoptionRequest = () => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Inicia sesión requerido",
-        description: "Necesitas iniciar sesión para solicitar una adopción",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsLoading(true);
     // Simulate API call
     setTimeout(() => {
@@ -76,6 +72,10 @@ const PostDetail = () => {
         description: `Tu solicitud para adoptar a ${pet.name} ha sido enviada.`,
       });
     }, 2000);
+  };
+
+  const handleEditPost = () => {
+    navigate("/dashboard");
   };
 
   return (
@@ -231,35 +231,59 @@ const PostDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Adoption Button */}
+            {/* Adoption/Edit Button */}
             {pet.adoptionStatus === "Disponible" && (
-              <Card className="gradient-primary border-0">
-                <CardContent className="p-6 text-center">
-                  <h3 className="text-lg font-semibold text-white mb-2">
-                    ¿Te interesa adoptar a {pet.name}?
-                  </h3>
-                  <p className="text-white/90 mb-4">
-                    Envía tu solicitud y el publicante se pondrá en contacto contigo
-                  </p>
-                  {isAuthenticated ? (
-                    <Button 
-                      onClick={handleAdoptionRequest}
-                      disabled={isLoading}
-                      size="lg"
-                      variant="secondary"
-                      className="w-full"
-                    >
-                      {isLoading ? "Enviando solicitud..." : "Solicitar Adopción"}
-                    </Button>
-                  ) : (
-                    <Link to="/auth">
-                      <Button size="lg" variant="secondary" className="w-full">
-                        Iniciar Sesión para Adoptar
+              <>
+                {isOwner ? (
+                  <Card className="gradient-primary border-0">
+                    <CardContent className="p-6 text-center">
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        Esta es tu publicación
+                      </h3>
+                      <p className="text-white/90 mb-4">
+                        Puedes editar o gestionar tu publicación desde el panel
+                      </p>
+                      <Button 
+                        onClick={handleEditPost}
+                        size="lg"
+                        variant="secondary"
+                        className="w-full"
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Ir al Panel
                       </Button>
-                    </Link>
-                  )}
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="gradient-primary border-0">
+                    <CardContent className="p-6 text-center">
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        ¿Te interesa adoptar a {pet.name}?
+                      </h3>
+                      <p className="text-white/90 mb-4">
+                        Envía tu solicitud y el publicante se pondrá en contacto contigo
+                      </p>
+                      {isAuthenticated ? (
+                        <Button 
+                          onClick={handleAdoptionRequest}
+                          disabled={isLoading}
+                          size="lg"
+                          variant="secondary"
+                          className="w-full"
+                        >
+                          {isLoading ? "Enviando solicitud..." : "Solicitar Adopción"}
+                        </Button>
+                      ) : (
+                        <Link to="/auth">
+                          <Button size="lg" variant="secondary" className="w-full">
+                            Iniciar Sesión para Adoptar
+                          </Button>
+                        </Link>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
           </div>
         </div>
