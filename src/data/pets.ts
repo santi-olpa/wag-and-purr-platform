@@ -14,8 +14,10 @@ export interface Pet {
   description: string;
   images: string[];
   owner: string;
+  ownerId: string;
   ownerContact: string;
   adoptionStatus: "Disponible" | "En Proceso" | "Adoptado";
+  active: boolean;
   createdAt: Date;
 }
 
@@ -30,8 +32,10 @@ export const mockPets: Pet[] = [
     description: "Luna es una perra muy cariñosa y juguetona. Le encanta estar con niños y otros perros. Está completamente vacunada y esterilizada. Busca una familia que le dé todo el amor que merece.",
     images: [pet1, pet1, pet1],
     owner: "Ana García",
+    ownerId: "1",
     ownerContact: "ana.garcia@email.com",
     adoptionStatus: "Disponible",
+    active: true,
     createdAt: new Date("2024-01-15")
   },
   {
@@ -42,9 +46,11 @@ export const mockPets: Pet[] = [
     location: "Barcelona, España",
     description: "Milo es un gato tranquilo y muy independiente. Perfecto para personas que buscan una compañía silenciosa. Es muy limpio y está acostumbrado a la vida en apartamento.",
     images: [pet2, pet2],
-    owner: "Carlos López", 
+    owner: "Carlos López",
+    ownerId: "1",
     ownerContact: "carlos.lopez@email.com",
     adoptionStatus: "Disponible",
+    active: true,
     createdAt: new Date("2024-01-20")
   },
   {
@@ -56,8 +62,10 @@ export const mockPets: Pet[] = [
     description: "Rocco es un cachorro lleno de energía que busca una familia activa. Le encanta jugar y aprender nuevos trucos. Necesita espacio para correr y mucho amor.",
     images: [pet3, pet3, pet3, pet3],
     owner: "María Fernández",
+    ownerId: "2",
     ownerContact: "maria.fernandez@email.com", 
     adoptionStatus: "En Proceso",
+    active: true,
     createdAt: new Date("2024-02-01")
   },
   {
@@ -69,8 +77,10 @@ export const mockPets: Pet[] = [
     description: "Bella es una gatita mayor muy dulce que busca un hogar tranquilo donde pasar sus años dorados. Es muy cariñosa y agradece mucho la compañía humana.",
     images: [pet4, pet4],
     owner: "Pedro Martín",
+    ownerId: "3",
     ownerContact: "pedro.martin@email.com",
-    adoptionStatus: "Disponible", 
+    adoptionStatus: "Disponible",
+    active: true,
     createdAt: new Date("2024-02-10")
   },
   {
@@ -82,8 +92,10 @@ export const mockPets: Pet[] = [
     description: "Kiwi es un loro muy inteligente y parlanchín. Necesita una familia con experiencia en aves que pueda dedicarle tiempo y estimulación mental.",
     images: [pet5],
     owner: "Laura Ruiz",
+    ownerId: "4",
     ownerContact: "laura.ruiz@email.com",
     adoptionStatus: "Disponible",
+    active: true,
     createdAt: new Date("2024-02-15")
   },
   {
@@ -94,9 +106,11 @@ export const mockPets: Pet[] = [
     location: "Zaragoza, España",
     description: "Canela es una conejita muy sociable que disfruta de la compañía. Está acostumbrada a vivir en casa y es muy limpia. Busca una familia que entienda sus necesidades especiales.",
     images: [pet6, pet6],
-    owner: "David González", 
+    owner: "David González",
+    ownerId: "5",
     ownerContact: "david.gonzalez@email.com",
     adoptionStatus: "Disponible",
+    active: true,
     createdAt: new Date("2024-02-20")
   }
 ];

@@ -1,26 +1,35 @@
 import { useState } from "react";
 import { useUser } from "@/context/UserContext";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
   Edit, 
   Trash2, 
   Eye, 
   Check, 
   X,
-  Heart,
-  Plus
+  Plus,
+  Power,
+  PowerOff
 } from "lucide-react";
 import { mockPets, Pet } from "@/data/pets";
 import { useToast } from "@/hooks/use-toast";
+import { PostFormDialog } from "@/components/dashboard/PostFormDialog";
 
 interface AdoptionRequest {
   id: string;
@@ -33,11 +42,11 @@ interface AdoptionRequest {
   createdAt: Date;
 }
 
-// Eliminado UserProfile, usamos User del contexto
-
 const Dashboard = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { user, updateUser } = useUser();
+  const [userPets, setUserPets] = useState<Pet[]>(mockPets.filter(p => p.ownerId === user?.id));
   const [editData, setEditData] = useState({
     nombre: user?.nombre || "",
     apellido: user?.apellido || "",
@@ -45,10 +54,14 @@ const Dashboard = () => {
     provincia: user?.provincia || "",
     localidad: user?.localidad || ""
   });
-
-  // Mock data for user's pets
-  const userPets = mockPets.slice(0, 2);
   
+  // Dialog states
+  const [postDialogOpen, setPostDialogOpen] = useState(false);
+  const [postDialogMode, setPostDialogMode] = useState<"create" | "edit">("create");
+  const [editingPost, setEditingPost] = useState<Pet | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [petToDelete, setPetToDelete] = useState<Pet | null>(null);
+
   // Mock adoption requests (received)
   const receivedRequests: AdoptionRequest[] = [
     {
@@ -103,6 +116,107 @@ const Dashboard = () => {
     });
   };
 
+  const handleCreatePost = () => {
+    setPostDialogMode("create");
+    setEditingPost(null);
+    setPostDialogOpen(true);
+  };
+
+  const handleEditPost = (pet: Pet) => {
+    setPostDialogMode("edit");
+    setEditingPost(pet);
+    setPostDialogOpen(true);
+  };
+
+  const handleToggleActive = (pet: Pet) => {
+    const newActive = !pet.active;
+    setUserPets(prev =>
+      prev.map(p =>
+        p.id === pet.id ? { ...p, active: newActive } : p
+      )
+    );
+    toast({
+      title: newActive ? "Publicación activada" : "Publicación desactivada",
+      description: newActive 
+        ? "Tu publicación está visible nuevamente." 
+        : "Tu publicación ya no es visible en adopción.",
+    });
+  };
+
+  const handleDeleteClick = (pet: Pet) => {
+    if (pet.active) {
+      toast({
+        title: "No se puede eliminar",
+        description: "Debes desactivar la publicación antes de eliminarla.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setPetToDelete(pet);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (petToDelete) {
+      setUserPets(prev => prev.filter(p => p.id !== petToDelete.id));
+      toast({
+        title: "Publicación eliminada",
+        description: "La publicación ha sido eliminada permanentemente.",
+      });
+      setPetToDelete(null);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  const handlePostSubmit = (data: Partial<Pet>) => {
+    if (postDialogMode === "create") {
+      const newPet: Pet = {
+        id: String(Date.now()),
+        name: data.name!,
+        type: data.type!,
+        age: data.age!,
+        location: data.location!,
+        description: data.description!,
+        images: data.images!,
+        owner: `${user?.nombre} ${user?.apellido}`,
+        ownerId: user?.id!,
+        ownerContact: user?.email!,
+        adoptionStatus: "Disponible",
+        active: true,
+        createdAt: new Date(),
+      };
+      setUserPets(prev => [newPet, ...prev]);
+      toast({
+        title: "Publicación creada",
+        description: "Tu mascota ya está disponible para adopción.",
+      });
+    } else {
+      setUserPets(prev =>
+        prev.map(p =>
+          p.id === editingPost?.id
+            ? {
+                ...p,
+                name: data.name!,
+                type: data.type!,
+                age: data.age!,
+                location: data.location!,
+                description: data.description!,
+                images: data.images!,
+              }
+            : p
+        )
+      );
+      toast({
+        title: "Publicación actualizada",
+        description: "Los cambios se han guardado correctamente.",
+      });
+    }
+  };
+
+  const handleViewPost = (petId: string) => {
+    navigate(`/post/${petId}`);
+  };
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4 max-w-6xl">
@@ -115,7 +229,7 @@ const Dashboard = () => {
         </div>
 
         {/* Dashboard Tabs */}
-  <Tabs defaultValue="profile" className="space-y-8">
+        <Tabs defaultValue="profile" className="space-y-8">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">Mi Perfil</TabsTrigger>
             <TabsTrigger value="posts">Mis Publicaciones</TabsTrigger>
@@ -140,7 +254,6 @@ const Dashboard = () => {
                         <Label htmlFor="nombre">Nombre</Label>
                         <Input
                           id="nombre"
-                          className="pl-10"
                           value={editData.nombre}
                           onChange={(e) => setEditData(prev => ({ ...prev, nombre: e.target.value }))}
                         />
@@ -149,7 +262,6 @@ const Dashboard = () => {
                         <Label htmlFor="apellido">Apellido</Label>
                         <Input
                           id="apellido"
-                          className="pl-10"
                           value={editData.apellido}
                           onChange={(e) => setEditData(prev => ({ ...prev, apellido: e.target.value }))}
                         />
@@ -159,7 +271,6 @@ const Dashboard = () => {
                         <Input
                           id="email"
                           type="email"
-                          className="pl-10"
                           value={user.email}
                           disabled
                         />
@@ -169,7 +280,6 @@ const Dashboard = () => {
                         <Input
                           id="phone"
                           type="tel"
-                          className="pl-10"
                           value={editData.phone}
                           onChange={(e) => setEditData(prev => ({ ...prev, phone: e.target.value }))}
                         />
@@ -178,7 +288,6 @@ const Dashboard = () => {
                         <Label htmlFor="provincia">Provincia</Label>
                         <Input
                           id="provincia"
-                          className="pl-10"
                           value={editData.provincia}
                           onChange={(e) => setEditData(prev => ({ ...prev, provincia: e.target.value }))}
                         />
@@ -187,7 +296,6 @@ const Dashboard = () => {
                         <Label htmlFor="localidad">Localidad</Label>
                         <Input
                           id="localidad"
-                          className="pl-10"
                           value={editData.localidad}
                           onChange={(e) => setEditData(prev => ({ ...prev, localidad: e.target.value }))}
                         />
@@ -214,55 +322,94 @@ const Dashboard = () => {
                     Mascotas que has publicado para adopción
                   </p>
                 </div>
-                <Button>
+                <Button onClick={handleCreatePost}>
                   <Plus className="w-4 h-4 mr-2" />
                   Nueva Publicación
                 </Button>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                {userPets.map((pet) => (
-                  <Card key={pet.id}>
-                    <CardContent className="p-6">
-                      <div className="flex gap-4">
-                        <img
-                          src={pet.images[0]}
-                          alt={pet.name}
-                          className="w-20 h-20 rounded-lg object-cover"
-                        />
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-start justify-between">
-                            <h4 className="font-semibold">{pet.name}</h4>
-                            <Badge variant={pet.adoptionStatus === "Disponible" ? "default" : "secondary"}>
-                              {pet.adoptionStatus}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {pet.type} • {pet.age}
-                          </p>
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {pet.description}
-                          </p>
-                          <div className="flex gap-2 pt-2">
-                            <Button variant="outline" size="sm">
-                              <Eye className="w-4 h-4 mr-1" />
-                              Ver
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Edit className="w-4 h-4 mr-1" />
-                              Editar
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Trash2 className="w-4 h-4 mr-1" />
-                              Eliminar
-                            </Button>
+              {userPets.length === 0 ? (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <p className="text-muted-foreground">
+                      Aún no tienes publicaciones. ¡Crea tu primera publicación!
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {userPets.map((pet) => (
+                    <Card key={pet.id} className={!pet.active ? "opacity-60" : ""}>
+                      <CardContent className="p-6">
+                        <div className="flex gap-4">
+                          <img
+                            src={pet.images[0]}
+                            alt={pet.name}
+                            className="w-20 h-20 rounded-lg object-cover"
+                          />
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-start justify-between">
+                              <h4 className="font-semibold">{pet.name}</h4>
+                              <Badge variant={pet.active ? "default" : "secondary"}>
+                                {pet.active ? "Disponible" : "Desactivada"}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {pet.type} • {pet.age}
+                            </p>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {pet.description}
+                            </p>
+                            <div className="flex gap-2 pt-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleViewPost(pet.id)}
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                Ver
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleEditPost(pet)}
+                              >
+                                <Edit className="w-4 h-4 mr-1" />
+                                Editar
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleToggleActive(pet)}
+                              >
+                                {pet.active ? (
+                                  <>
+                                    <PowerOff className="w-4 h-4 mr-1" />
+                                    Desactivar
+                                  </>
+                                ) : (
+                                  <>
+                                    <Power className="w-4 h-4 mr-1" />
+                                    Activar
+                                  </>
+                                )}
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleDeleteClick(pet)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Eliminar
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           </TabsContent>
 
@@ -376,6 +523,33 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Post Form Dialog */}
+      <PostFormDialog
+        open={postDialogOpen}
+        onOpenChange={setPostDialogOpen}
+        onSubmit={handlePostSubmit}
+        editingPost={editingPost}
+        mode={postDialogMode}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. La publicación de {petToDelete?.name} será eliminada permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
